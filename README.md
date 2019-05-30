@@ -15,6 +15,7 @@ wasm-objdump -x add.o                   # for debugging
 wasm-ld \
     --no-entry \                        # no entry function
     --export-all \                      # export all symbols
+    --export=add --export=sum --export=malloc # alternatively just the ones you want
     -zstack-size=$[8 * 1024 * 1024] \   # optionally set wasm memory size (ex: 8MiB)
     -o add.wasm \
     add.o
