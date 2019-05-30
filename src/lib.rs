@@ -9,6 +9,11 @@ pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
+#[wasm_bindgen]
+pub fn sum(slice : &[i32]) -> i32 {
+    slice.iter().sum()
+}
+
 // mod utils;
 
 // use wasm_bindgen::prelude::*;
