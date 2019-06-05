@@ -2,7 +2,7 @@
 
 Inspired by Surma's excellent post about "[Compiling C to WebAssembly without Emscripten](https://dassur.ma/things/c-to-webassembly/)", I wanted to explore creating a similarly stripped down environment in Rust.
 
-To summarize: Emscripten is an incredible toolchain b let's use Rust to create some WebAssembly without any of the batteries that Emscripten provides.
+To summarize: let's use Rust to create some WebAssembly without any of the batteries that Emscripten provides.
 
 ## No Additional Cargo
 
