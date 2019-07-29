@@ -19,7 +19,7 @@ pub extern fn add(a: i32, b: i32) -> i32 {
 
 Hopefully the function signature and body are straightforward. Some of the attributes are non-standard, though.
 
-The `#![no_std]` attribute tells the Rust compiler not to include Rust's standard library. This will drastically reduce our potential code size as well as limit our access to various host features: threads, networking, heap allocation, etc.
+The `#![no_std]` attribute tells the Rust compiler not to include Rust's standard library. This isn't going to impact our limited example's size but it is good practise!
 
 `#[no_mangle]` will disable Rust's name mangling for a function and make it easy to link to.
 
@@ -81,10 +81,15 @@ llc \
 wasm-objdump -x add.o                   # for debugging
 wasm-ld \
     --no-entry \                        # no entry function
-    --export-all \                      # export all symbols
+    --export=add \                      # just export add
     -zstack-size=$[8 * 1024 * 1024] \   # optionally set wasm memory size (ex: 8MiB)
     -o add.wasm \
     add.o
+wasm-opt \
+    --strip-producers \                 # https://github.com/WebAssembly/tool-conventions/blob/master/ProducersSection.md
+    -Oz \                               # smol
+    -o ./pkg/add.wasm \
+    ./pkg/add.wasm
 wasm2wat -o add.wast add.wasm           # for debugging
 ```
 
@@ -129,15 +134,15 @@ pub extern fn sum(slice: &[i32]) -> i32 {
 Calling this function means we first have to allocate memory on the WASM heap and then copy data into that memory. Only then can we execute our sum function.
 
 ```js
-const jsArray = [1, 2, 3];
-const cArrayPointer = wasm.malloc(jsArray.length * 4);
-const cArray = new Uint32Array(
+const jsArray = [1, 2, 3];                              // data
+const cArrayPointer = wasm.malloc(jsArray.length * 4);  // heap allocation
+const cArray = new Uint32Array(                         // memory view
     wasm.memory.buffer,
     cArrayPointer,
     jsArray.length
 );
-cArray.set(jsArray);
-wasm.sum(cArrayPointer, cArray.length); // = 6
+cArray.set(jsArray);                                    // memcpy
+wasm.sum(cArrayPointer, cArray.length);                 // = 6
 ```
 
 ## Using Cargo
@@ -183,7 +188,18 @@ pub fn sum(slice : &[i32]) -> i32 {
 }
 ```
 
-With Rust 1.35.0 and LLVM 8.0, this results in a WASM file that is 440 bytes whereas our completely handrolled one clocks in at 252 bytes. Most of this additional weight comes from the abstraction and safety around the GlobalAlloc trait.
+With Rust 1.36.0 and LLVM 8.0 and wasm-pack#439e5231 (for wasm-opt integration), this results in a WASM file that is 216 bytes whereas our completely handrolled one clocks in at 208 bytes.
+
+Most of this additional weight comes from the additional functionality provided by the GlobalAlloc trait. Passing the `Layout` information isn't completely free.
+
+A difference whose origin I haven't had the chance to track down is the wasm-pack WASM containing a single `data` entry as opposed to our handrolled one's multiple globals and exports.
+
+## Tools
+- rustc 1.36.0 (a53f9df32 2019-07-03)
+- llvm 8.0.0
+- wasm-pack#439e5231
+- wabt 1.0.11 (for wasm-objdump & wasm2wat)
+- binaryen stable 87 (for wasm-opt)
 
 ```
 rustc.exe --target=wasm32-unknown-unknown --emit llvm-ir --crate-type staticlib -O -o pkg\add.ll src\add.rs
