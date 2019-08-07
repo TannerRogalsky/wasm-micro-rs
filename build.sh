@@ -4,7 +4,7 @@ rustc \
     --target=wasm32-unknown-unknown \
     --emit llvm-ir \
     --crate-type staticlib \
-    -O \
+    -C opt-level=s \
     -o ./pkg/add.ll \
     ./src/add.rs
 
