@@ -11,19 +11,19 @@ pub extern fn sum(slice: &[i32]) -> i32 {
 }
 
 extern {
-    static __heap_base: usize;
+    static mut __heap_base: u8;
 }
 static mut BUMP_POINTER : isize = 0;
 
 #[no_mangle]
-unsafe extern fn malloc(n: isize) -> *const usize {
-    let r : *const usize = (&__heap_base as *const usize).offset(BUMP_POINTER);
+unsafe extern "C" fn malloc(n: isize) -> *mut u8 {
+    let r: *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
     BUMP_POINTER += n;
     r
 }
 
 #[no_mangle]
-unsafe extern fn free(_p: *const usize) {
+unsafe extern "C" fn free(_p: *const u8) {
     // ohno.jpg
 }
 
