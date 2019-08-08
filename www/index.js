@@ -1,4 +1,4 @@
-import * as wasm from "wasm-micro-test2";
+import * as wasm from "wasm-micro-rs";
 {
     const addResult = wasm.add(1, 3);
     console.log(addResult);

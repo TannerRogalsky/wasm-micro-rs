@@ -1,5 +1,5 @@
 [package]
-name = "wasm-micro-test2"
+name = "wasm-micro-rs"
 version = "0.1.0"
 authors = ["Tanner Rogalsky <tanner@tannerrogalsky.com>"]
 edition = "2018"
