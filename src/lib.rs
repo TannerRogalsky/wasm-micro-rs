@@ -1,19 +1,19 @@
 #![no_std]
 extern crate wasm_bindgen;
 
-use wasm_bindgen::prelude::wasm_bindgen;
 use core::alloc::{GlobalAlloc, Layout};
+use wasm_bindgen::prelude::wasm_bindgen;
 
-extern {
+extern "C" {
     static mut __heap_base: u8;
 }
-static mut BUMP_POINTER : isize = 0;
+static mut BUMP_POINTER: isize = 0;
 
 struct BadAllocator;
 
 unsafe impl GlobalAlloc for BadAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let r : *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
+        let r: *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
         BUMP_POINTER += layout.size() as isize;
         r
     }
@@ -31,6 +31,6 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 
 #[wasm_bindgen]
-pub fn sum(slice : &[i32]) -> i32 {
+pub fn sum(slice: &[i32]) -> i32 {
     slice.iter().sum()
 }

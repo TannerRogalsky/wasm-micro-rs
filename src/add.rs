@@ -1,19 +1,19 @@
 #![no_std]
 
 #[no_mangle]
-pub extern fn add(a: i32, b: i32) -> i32 {
+pub extern "C" fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
 #[no_mangle]
-pub extern fn sum(slice: &[i32]) -> i32 {
+pub extern "C" fn sum(slice: &[i32]) -> i32 {
     slice.iter().sum()
 }
 
-extern {
+extern "C" {
     static mut __heap_base: u8;
 }
-static mut BUMP_POINTER : isize = 0;
+static mut BUMP_POINTER: isize = 0;
 
 #[no_mangle]
 unsafe extern "C" fn malloc(n: isize) -> *mut u8 {
