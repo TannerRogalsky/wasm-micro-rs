@@ -12,7 +12,7 @@ Starting simply, we'll create a function that adds two integers together.
 #![no_std]
 
 #[no_mangle]
-pub extern fn add(a: i32, b: i32) -> i32 {
+pub extern "C" fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 ```
@@ -32,7 +32,7 @@ rustc \
     --target=wasm32-unknown-unknown \   # wasm triple
     --emit llvm-ir \                    # we will use llvm tools for the further steps
     --crate-type staticlib \            # clump everything together
-    -O \                                # release mode strips panics which cause problems
+    -C opt-level=s \                    # release mode, size-optimized strips panics which cause problems
     -o add.ll \                         # output file
     add.rs
 ```
@@ -104,20 +104,20 @@ wasm.add(1, 3); // = 4
 Just because we're not using std doesn't mean we can't allocate memory.
 
 ```rust
-extern {
-    static __heap_base: usize;
+extern "C" {
+    static mut __heap_base: u8;
 }
-static mut BUMP_POINTER : isize = 0;
+static mut BUMP_POINTER: isize = 0;
 
 #[no_mangle]
-unsafe extern fn malloc(n: isize) -> *const usize {
-    let r : *const usize = (&__heap_base as *const usize).offset(BUMP_POINTER);
+unsafe extern "C" fn malloc(n: isize) -> *mut u8 {
+    let r: *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
     BUMP_POINTER += n;
     r
 }
 
 #[no_mangle]
-unsafe extern fn free(_p: *const usize) {
+unsafe extern "C" fn free(_p: *const u8) {
     // ohno.jpg
 }
 ```
@@ -126,7 +126,7 @@ The world's worst allocator.
 
 ```rust
 #[no_mangle]
-pub extern fn sum(slice: &[i32]) -> i32 {
+pub extern "C" fn sum(slice: &[i32]) -> i32 {
     slice.iter().sum()
 }
 ```
@@ -153,19 +153,19 @@ It's interesting to use the basic tools to build our binary but one of the appea
 #![no_std]
 extern crate wasm_bindgen;
 
-use wasm_bindgen::prelude::wasm_bindgen;
 use core::alloc::{GlobalAlloc, Layout};
+use wasm_bindgen::prelude::wasm_bindgen;
 
-extern {
+extern "C" {
     static mut __heap_base: u8;
 }
-static mut BUMP_POINTER : isize = 0;
+static mut BUMP_POINTER: isize = 0;
 
 struct BadAllocator;
 
 unsafe impl GlobalAlloc for BadAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let r : *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
+        let r: *mut u8 = (&mut __heap_base as *mut u8).offset(BUMP_POINTER);
         BUMP_POINTER += layout.size() as isize;
         r
     }
@@ -183,7 +183,7 @@ pub fn add(a: i32, b: i32) -> i32 {
 }
 
 #[wasm_bindgen]
-pub fn sum(slice : &[i32]) -> i32 {
+pub fn sum(slice: &[i32]) -> i32 {
     slice.iter().sum()
 }
 ```
