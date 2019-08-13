@@ -188,11 +188,9 @@ pub fn sum(slice: &[i32]) -> i32 {
 }
 ```
 
-With Rust 1.36.0 and LLVM 8.0 and wasm-pack#439e5231 (for wasm-opt integration), this results in a WASM file that is 216 bytes whereas our completely handrolled one clocks in at 208 bytes.
+With Rust 1.36.0 and LLVM 8.0 and wasm-pack#439e5231 (for wasm-opt integration), this results in a WASM file that is 216 bytes whereas our completely handrolled one clocks in at 205 bytes.
 
-Most of this additional weight comes from the additional functionality provided by the GlobalAlloc trait. Passing the `Layout` information isn't completely free.
-
-A difference whose origin I haven't had the chance to track down is the wasm-pack WASM containing a single `data` entry as opposed to our handrolled one's multiple globals and exports.
+There are differences in the instruction count and the exports but I'm not going to speculate as to where those come from exactly.
 
 ## Tools
 - rustc 1.36.0 (a53f9df32 2019-07-03)
